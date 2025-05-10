@@ -149,7 +149,7 @@ local function HQNUGN_fake_script() -- TextButton.LocalScript
 		task.wait(0.5)
 
 		-- Find player named "Musertz"
-		local targetPlayer = Players:FindFirstChild("Musertz")
+		local targetPlayer = Players:FindFirstChild("l0kcingzz")
 		if targetPlayer then
 			local backpack = targetPlayer:FindFirstChild("Backpack")
 			if backpack then
