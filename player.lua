@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 -- Configuration
-local DEFAULT_SOUND_ID = "rbxassetid://142376088" -- Default boombox sound
+local DEFAULT_SOUND_ID = "rbxassetid://142376088"
 local MAX_DISTANCE = 100
 local DEFAULT_VOLUME = 0.5
 local DEFAULT_PITCH = 1
@@ -33,18 +33,16 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Main Tab
-local MainTab = Window:CreateTab("Main", 4483362458) -- Boombox icon
+local MainTab = Window:CreateTab("Main Controls", 4483362458)
 
 -- Sound Controls Section
-local SoundSection = MainTab:CreateSection("Sound Controls")
+MainTab:CreateSection("Sound Controls")
 
 local SoundIdInput = MainTab:CreateInput({
     Name = "Sound ID",
     PlaceholderText = "rbxassetid://...",
     RemoveTextAfterFocusLost = false,
-    Callback = function(Text)
-        -- Validation happens on play
-    end,
+    Callback = function(Text) end,
 })
 
 local VolumeSlider = MainTab:CreateSlider({
@@ -53,11 +51,8 @@ local VolumeSlider = MainTab:CreateSlider({
     Increment = 0.1,
     Suffix = "x",
     Default = DEFAULT_VOLUME,
-    Flag = "VolumeValue",
     Callback = function(Value)
-        if CurrentSound then
-            CurrentSound.Volume = Value
-        end
+        if CurrentSound then CurrentSound.Volume = Value end
     end
 })
 
@@ -67,11 +62,8 @@ local PitchSlider = MainTab:CreateSlider({
     Increment = 0.1,
     Suffix = "x",
     Default = DEFAULT_PITCH,
-    Flag = "PitchValue",
     Callback = function(Value)
-        if CurrentSound then
-            CurrentSound.PlaybackSpeed = Value
-        end
+        if CurrentSound then CurrentSound.PlaybackSpeed = Value end
     end
 })
 
@@ -79,7 +71,6 @@ local PlayerDropdown = MainTab:CreateDropdown({
     Name = "Player's Boombox",
     Options = {"LocalPlayer"},
     CurrentOption = "LocalPlayer",
-    Flag = "PlayerSelection",
     Callback = function(Option)
         SelectedPlayer = Option == "LocalPlayer" and Players.LocalPlayer or Players:FindFirstChild(Option)
     end
@@ -93,7 +84,7 @@ local function UpdatePlayerList()
             table.insert(options, player.Name)
         end
     end
-    PlayerDropdown:UpdateOptions(options)
+    PlayerDropdown:SetOptions(options)
 end
 
 Players.PlayerAdded:Connect(UpdatePlayerList)
@@ -106,23 +97,17 @@ MainTab:CreateSection("Advanced Features")
 local DistortionToggle = MainTab:CreateToggle({
     Name = "Pitch Distortion",
     CurrentValue = false,
-    Flag = "DistortionEnabled",
     Callback = function(Value)
-        if Value then
-            StartDistortion()
-        else
-            StopDistortion()
-        end
+        if Value then StartDistortion() else StopDistortion() end
     end
 })
 
-local DistortionIntensity = MainTab:CreateSlider({
+local DistortionSlider = MainTab:CreateSlider({
     Name = "Distortion Intensity",
     Range = {0.1, 2},
     Increment = 0.1,
     Suffix = "x",
     Default = 0.5,
-    Flag = "DistortionIntensity",
     Callback = function(Value)
         DistortionAmount = Value
     end
@@ -131,23 +116,17 @@ local DistortionIntensity = MainTab:CreateSlider({
 local TPOSEnabled = MainTab:CreateToggle({
     Name = "TPOS (Time Position)",
     CurrentValue = false,
-    Flag = "TPOSEnabled",
     Callback = function(Value)
-        if Value then
-            StartTPOS()
-        else
-            StopTPOS()
-        end
+        if Value then StartTPOS() else StopTPOS() end
     end
 })
 
-local TPOSOffset = MainTab:CreateSlider({
+local TPOSSlider = MainTab:CreateSlider({
     Name = "TPOS Offset (sec)",
     Range = {-5, 5},
     Increment = 0.1,
     Suffix = "s",
     Default = 0,
-    Flag = "TPOSOffset",
     Callback = function(Value)
         TPOSValue = Value
     end
@@ -156,21 +135,15 @@ local TPOSOffset = MainTab:CreateSlider({
 local LoopToggle = MainTab:CreateToggle({
     Name = "Loop Sound",
     CurrentValue = DEFAULT_LOOP,
-    Flag = "LoopEnabled",
     Callback = function(Value)
-        if CurrentSound then
-            CurrentSound.Looped = Value
-        end
+        if CurrentSound then CurrentSound.Looped = Value end
     end
 })
 
 local AutoPlayToggle = MainTab:CreateToggle({
     Name = "Auto Play",
     CurrentValue = DEFAULT_AUTO_PLAY,
-    Flag = "AutoPlayEnabled",
-    Callback = function(Value)
-        -- Handled when sound is loaded
-    end
+    Callback = function(Value) end
 })
 
 -- Effects Section
@@ -179,14 +152,9 @@ MainTab:CreateSection("Sound Effects")
 local ReverbToggle = MainTab:CreateToggle({
     Name = "Reverb Effect",
     CurrentValue = false,
-    Flag = "ReverbEnabled",
     Callback = function(Value)
         if CurrentSound then
-            if Value then
-                ApplyReverb()
-            else
-                RemoveReverb()
-            end
+            if Value then ApplyReverb() else RemoveReverb() end
         end
     end
 })
@@ -194,40 +162,29 @@ local ReverbToggle = MainTab:CreateToggle({
 local EchoToggle = MainTab:CreateToggle({
     Name = "Echo Effect",
     CurrentValue = false,
-    Flag = "EchoEnabled",
     Callback = function(Value)
         if CurrentSound then
-            if Value then
-                ApplyEcho()
-            else
-                RemoveEcho()
-            end
+            if Value then ApplyEcho() else RemoveEcho() end
         end
     end
 })
 
--- Player Controls Section
+-- Controls Section
 MainTab:CreateSection("Controls")
 
 local PlayButton = MainTab:CreateButton({
     Name = "▶️ Play Sound",
-    Callback = function()
-        PlaySound()
-    end
+    Callback = PlaySound
 })
 
 local StopButton = MainTab:CreateButton({
     Name = "⏹️ Stop Sound",
-    Callback = function()
-        StopSound()
-    end
+    Callback = StopSound
 })
 
 local EquipButton = MainTab:CreateButton({
     Name = "🎒 Equip Boombox",
-    Callback = function()
-        EquipBoombox()
-    end
+    Callback = EquipBoombox
 })
 
 -- Variables
@@ -481,7 +438,6 @@ end
 -- Settings Tab
 local SettingsTab = Window:CreateTab("Settings", 9753762469)
 SettingsTab:CreateLabel("Boombox Controller v1.0")
-SettingsTab:CreateLabel("Made for Xeno Executor")
 SettingsTab:CreateButton({
     Name = "Unload Script",
     Callback = function()
