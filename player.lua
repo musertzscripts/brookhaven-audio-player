@@ -1,44 +1,41 @@
--- Ray Field Boombox Library
--- By: [Your Name]
--- Version: 1.2
-
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Services
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
 -- Configuration
-local DEFAULT_SOUND_ID = "rbxassetid://142376088" -- Default sound (change to your preferred default)
-local MAX_DISTANCE = 100 -- Max distance for sound to be heard
+local DEFAULT_SOUND_ID = "rbxassetid://142376088" -- Default boombox sound
+local MAX_DISTANCE = 100
 local DEFAULT_VOLUME = 0.5
 local DEFAULT_PITCH = 1
 local DEFAULT_LOOP = true
 local DEFAULT_AUTO_PLAY = true
 
--- Create the window
+-- Create Window
 local Window = Rayfield:CreateWindow({
     Name = "Advanced Boombox Controller",
-    LoadingTitle = "Ray Field Audio Suite",
-    LoadingSubtitle = "by [Your Name]",
+    LoadingTitle = "Loading Boombox Suite",
+    LoadingSubtitle = "by YourName",
     ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "RayFieldBoombox",
-        FileName = "Configuration"
+       Enabled = true,
+       FolderName = "RayfieldBoombox",
+       FileName = "Config"
     },
     Discord = {
-        Enabled = true,
-        Invite = "YOUR_DISCORD_INVITE_CODE", -- Replace with your Discord invite code
-        RememberJoins = true
+       Enabled = false,
+       Invite = "noinvitelink",
+       RememberJoins = true
     },
-    KeySystem = false -- Set to true if you want a key system
+    KeySystem = false
 })
 
--- Main tab
-local MainTab = Window:CreateTab("Main Controls", 4483362458) -- Boombox icon
+-- Main Tab
+local MainTab = Window:CreateTab("Main", 4483362458) -- Boombox icon
 
--- Sound controls section
+-- Sound Controls Section
 local SoundSection = MainTab:CreateSection("Sound Controls")
 
 local SoundIdInput = MainTab:CreateInput({
@@ -80,19 +77,21 @@ local PitchSlider = MainTab:CreateSlider({
 
 local PlayerDropdown = MainTab:CreateDropdown({
     Name = "Player's Boombox",
-    Options = {},
-    CurrentOption = LocalPlayer.Name,
+    Options = {"LocalPlayer"},
+    CurrentOption = "LocalPlayer",
     Flag = "PlayerSelection",
     Callback = function(Option)
-        SelectedPlayer = Players:FindFirstChild(Option)
+        SelectedPlayer = Option == "LocalPlayer" and Players.LocalPlayer or Players:FindFirstChild(Option)
     end
 })
 
 -- Update player list
 local function UpdatePlayerList()
-    local options = {}
+    local options = {"LocalPlayer"}
     for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(options, player.Name)
+        if player ~= Players.LocalPlayer then
+            table.insert(options, player.Name)
+        end
     end
     PlayerDropdown:UpdateOptions(options)
 end
@@ -101,8 +100,8 @@ Players.PlayerAdded:Connect(UpdatePlayerList)
 Players.PlayerRemoved:Connect(UpdatePlayerList)
 UpdatePlayerList()
 
--- Advanced features section
-local AdvancedSection = MainTab:CreateSection("Advanced Features")
+-- Advanced Features Section
+MainTab:CreateSection("Advanced Features")
 
 local DistortionToggle = MainTab:CreateToggle({
     Name = "Pitch Distortion",
@@ -130,7 +129,7 @@ local DistortionIntensity = MainTab:CreateSlider({
 })
 
 local TPOSEnabled = MainTab:CreateToggle({
-    Name = "TPOS (Time Position Offset)",
+    Name = "TPOS (Time Position)",
     CurrentValue = false,
     Flag = "TPOSEnabled",
     Callback = function(Value)
@@ -143,7 +142,7 @@ local TPOSEnabled = MainTab:CreateToggle({
 })
 
 local TPOSOffset = MainTab:CreateSlider({
-    Name = "TPOS Offset (seconds)",
+    Name = "TPOS Offset (sec)",
     Range = {-5, 5},
     Increment = 0.1,
     Suffix = "s",
@@ -166,7 +165,7 @@ local LoopToggle = MainTab:CreateToggle({
 })
 
 local AutoPlayToggle = MainTab:CreateToggle({
-    Name = "Auto Play on Load",
+    Name = "Auto Play",
     CurrentValue = DEFAULT_AUTO_PLAY,
     Flag = "AutoPlayEnabled",
     Callback = function(Value)
@@ -174,8 +173,8 @@ local AutoPlayToggle = MainTab:CreateToggle({
     end
 })
 
--- Effects section
-local EffectsSection = MainTab:CreateSection("Sound Effects")
+-- Effects Section
+MainTab:CreateSection("Sound Effects")
 
 local ReverbToggle = MainTab:CreateToggle({
     Name = "Reverb Effect",
@@ -184,10 +183,8 @@ local ReverbToggle = MainTab:CreateToggle({
     Callback = function(Value)
         if CurrentSound then
             if Value then
-                CurrentSound:SetAttribute("Reverb", true)
                 ApplyReverb()
             else
-                CurrentSound:SetAttribute("Reverb", false)
                 RemoveReverb()
             end
         end
@@ -201,33 +198,33 @@ local EchoToggle = MainTab:CreateToggle({
     Callback = function(Value)
         if CurrentSound then
             if Value then
-                CurrentSound:SetAttribute("Echo", true)
                 ApplyEcho()
             else
-                CurrentSound:SetAttribute("Echo", false)
                 RemoveEcho()
             end
         end
     end
 })
 
--- Player controls
+-- Player Controls Section
+MainTab:CreateSection("Controls")
+
 local PlayButton = MainTab:CreateButton({
-    Name = "Play Sound",
+    Name = "▶️ Play Sound",
     Callback = function()
         PlaySound()
     end
 })
 
 local StopButton = MainTab:CreateButton({
-    Name = "Stop Sound",
+    Name = "⏹️ Stop Sound",
     Callback = function()
         StopSound()
     end
 })
 
 local EquipButton = MainTab:CreateButton({
-    Name = "Equip Boombox",
+    Name = "🎒 Equip Boombox",
     Callback = function()
         EquipBoombox()
     end
@@ -236,6 +233,7 @@ local EquipButton = MainTab:CreateButton({
 -- Variables
 local CurrentSound = nil
 local CurrentBoombox = nil
+local SelectedPlayer = Players.LocalPlayer
 local DistortionAmount = 0.5
 local TPOSValue = 0
 local DistortionConnection = nil
@@ -245,7 +243,7 @@ local TPOSConnection = nil
 function FindBoombox(player)
     if not player then return nil end
     
-    -- Check backpack first
+    -- Check backpack
     local backpack = player:FindFirstChild("Backpack")
     if backpack then
         for _, item in ipairs(backpack:GetChildren()) do
@@ -269,24 +267,27 @@ function FindBoombox(player)
 end
 
 function EquipBoombox()
-    local player = SelectedPlayer or LocalPlayer
+    local player = SelectedPlayer or Players.LocalPlayer
     local boombox = FindBoombox(player)
     
     if boombox then
-        if player == LocalPlayer then
-            LocalPlayer.Character.Humanoid:EquipTool(boombox)
+        if player == Players.LocalPlayer then
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(boombox)
+            end
         end
         CurrentBoombox = boombox
-        RayField:Notify({
+        Rayfield:Notify({
             Title = "Boombox Equipped",
-            Content = "Successfully equipped " .. player.Name .. "'s boombox",
+            Content = "Using "..player.Name.."'s boombox",
             Duration = 3,
             Image = 4483362458
         })
     else
-        RayField:Notify({
+        Rayfield:Notify({
             Title = "Error",
-            Content = "No boombox found in " .. player.Name .. "'s inventory",
+            Content = "No boombox found for "..player.Name,
             Duration = 3,
             Image = 4483362458
         })
@@ -299,21 +300,21 @@ function PlaySound()
     
     -- Validate sound ID
     if not soundId:match("^rbxassetid://%d+$") and not soundId:match("^%d+$") then
-        RayField:Notify({
+        Rayfield:Notify({
             Title = "Invalid Sound ID",
-            Content = "Please enter a valid sound ID (e.g., 142376088 or rbxassetid://142376088)",
+            Content = "Please enter a valid sound ID",
             Duration = 3,
             Image = 4483362458
         })
         return
     end
     
-    -- Format sound ID if needed
+    -- Format sound ID
     if soundId:match("^%d+$") then
-        soundId = "rbxassetid://" .. soundId
+        soundId = "rbxassetid://"..soundId
     end
     
-    -- Stop current sound if playing
+    -- Stop current sound
     if CurrentSound then
         CurrentSound:Stop()
         CurrentSound:Destroy()
@@ -334,23 +335,26 @@ function PlaySound()
     if CurrentBoombox then
         CurrentSound.Parent = CurrentBoombox.Handle or CurrentBoombox
     else
-        CurrentSound.Parent = LocalPlayer.Character:FindFirstChild("Head") or LocalPlayer.Character
+        local character = Players.LocalPlayer.Character
+        if character then
+            CurrentSound.Parent = character:FindFirstChild("Head") or character
+        end
     end
     
-    -- Load sound
+    -- Load and play
     CurrentSound.Loaded:Connect(function()
         if AutoPlayToggle.Value then
             CurrentSound:Play()
             
-            -- Apply effects if they're enabled
+            -- Apply effects
             if ReverbToggle.Value then ApplyReverb() end
             if EchoToggle.Value then ApplyEcho() end
             if DistortionToggle.Value then StartDistortion() end
             if TPOSEnabled.Value then StartTPOS() end
             
-            RayField:Notify({
-                Title = "Sound Playing",
-                Content = "Now playing sound ID: " .. soundId,
+            Rayfield:Notify({
+                Title = "Playing Sound",
+                Content = "Now playing: "..soundId,
                 Duration = 3,
                 Image = 4483362458
             })
@@ -430,7 +434,8 @@ end
 function ApplyReverb()
     if not CurrentSound then return end
     
-    -- Create reverb effect
+    RemoveReverb() -- Clear existing
+    
     local reverb = Instance.new("ReverbSoundEffect")
     reverb.Enabled = true
     reverb.DecayTime = 3
@@ -453,38 +458,39 @@ end
 function ApplyEcho()
     if not CurrentSound then return end
     
-    -- Create echo effect
+    RemoveEcho() -- Clear existing
+    
     local echo = Instance.new("EchoSoundEffect")
     echo.Enabled = true
     echo.Delay = 0.5
     echo.Feedback = 0.5
     echo.WetLevel = 0.5
-    echo.Parent = CurrentSoundvbfhuoejrbcijrtbcijebcf
+    echo.Parent = CurrentSound
 end
 
 function RemoveEcho()
     if not CurrentSound then return end
     
-    for _, effect in ipairs(CurrentShr4ound:GetChildren()) do
+    for _, effect in ipairs(CurrentSound:GetChildren()) do
         if effect:IsA("EchoSoundEffect") then
             effect:Destroy()
         end
     end
 end
 
--- Initialize
-local SettingsTab = Window:CreateTab("Settings", 9753762469) -- Settings icon
-SettingsTab:CreateLabel("Ray Field Boombox Controller v1.2")
-SettingsTab:CreateLabel("Created by [Your Name]")
+-- Settings Tab
+local SettingsTab = Window:CreateTab("Settings", 9753762469)
+SettingsTab:CreateLabel("Boombox Controller v1.0")
+SettingsTab:CreateLabel("Made for Xeno Executor")
 SettingsTab:CreateButton({
     Name = "Unload Script",
     Callback = function()
-        Window:Destroy()
+        Rayfield:Destroy()
     end
 })
 
--- Auto-equip boombox if found
-spawn(function()
-    wait(2) -- Wait for character to load
+-- Auto-equip on start
+task.spawn(function()
+    task.wait(2)
     EquipBoombox()
 end)
