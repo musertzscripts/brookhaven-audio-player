@@ -2,7 +2,7 @@
 -- By: [Your Name]
 -- Version: 1.2
 
-local RayField = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local SoundService = game:GetService("SoundService")
@@ -18,7 +18,7 @@ local DEFAULT_LOOP = true
 local DEFAULT_AUTO_PLAY = true
 
 -- Create the window
-local Window = RayField:CreateWindow({
+local Window = Rayfield:CreateWindow({
     Name = "Advanced Boombox Controller",
     LoadingTitle = "Ray Field Audio Suite",
     LoadingSubtitle = "by [Your Name]",
